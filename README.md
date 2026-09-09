@@ -9,7 +9,7 @@ Inspired by [Human Atlas](https://github.com/ashemag/human-atlas).
 Requires Node.js 22.13 or later. Model assets are included.
 
 ```sh
-npm ci
+npm install
 npm run dev
 ```
 
