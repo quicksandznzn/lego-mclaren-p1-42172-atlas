@@ -304,7 +304,6 @@ function showFamilies(next: boolean[]) {
 }
 const presets: Record<string, number[]> = {
   all: families.map((_, i) => i),
-  internal: families.map((_, i) => i).filter((i) => i !== 0),
   structure: [2, 3],
   mechanisms: [4, 6],
 };
