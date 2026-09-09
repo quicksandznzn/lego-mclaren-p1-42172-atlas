@@ -1,0 +1,30 @@
+{
+  "name": "lego-mclaren-p1-42172-atlas",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "check": "tsc --noEmit && npm test",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "model:prepare": "python3 scripts/prepare-model.py && node scripts/convert-model.mjs"
+  },
+  "dependencies": {
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.185.4",
+    "prettier": "^3.9.6",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2"
+  },
+  "description": "Interactive LEGO Technic McLaren P1 42172 explorer inspired by Human Atlas.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}

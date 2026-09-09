@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.vercel/
+.DS_Store
+.env*
+!.env.example
+*.log
+
+.cache/
+
+.idea/
+__pycache__/
+*.py[cod]

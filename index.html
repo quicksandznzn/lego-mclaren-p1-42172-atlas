@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#efeee9" />
+    <title>LEGO McLaren P1 Atlas · Technic 42172</title>
+    <link rel="icon" href="data:," />
+  </head>
+  <body>
+    <header>
+      <div class="eyebrow">LEGO ATLAS <span>TECHNIC</span></div>
+      <h1>McLAREN<span>P1</span><small>42172</small></h1>
+      <p id="subtitle">The anatomy of a hypercar.</p>
+    </header>
+    <div class="language">
+      <button id="en" aria-pressed="true">EN</button
+      ><button id="zh" aria-pressed="false">中文</button>
+    </div>
+    <main>
+      <div id="stage" aria-label="Interactive McLaren P1 model"></div>
+      <div id="tooltip" hidden></div>
+      <div id="loading">
+        <div class="load-line"></div>
+        <strong id="load-title">Preparing the P1</strong>
+        <p id="load-copy">Loading the community digital model…</p>
+      </div>
+      <aside class="panel library">
+        <div class="panel-heading">
+          <span data-en="PART LIBRARY" data-zh="零件目录">PART LIBRARY</span
+          ><span id="part-count">—</span>
+        </div>
+        <input
+          id="search"
+          type="search"
+          aria-label="Search parts"
+          placeholder="Find a part or number…"
+        />
+        <div class="presets">
+          <button id="all" data-en="All parts" data-zh="全部零件">All parts</button
+          ><button id="internal" data-en="Under the skin" data-zh="隐藏外壳">Under the skin</button>
+        </div>
+        <div id="families"></div>
+        <div id="results" hidden></div>
+        <div class="panel-foot">
+          <span id="visible-count">Waiting for model</span
+          ><button id="restore" data-en="Restore" data-zh="恢复">Restore</button>
+        </div>
+      </aside>
+      <nav class="camera panel" aria-label="Camera">
+        <button data-view="perspective" aria-label="Three-quarter view" aria-pressed="true">
+          ¾</button
+        ><button data-view="front" aria-label="Front view">F</button
+        ><button data-view="side" aria-label="Side view">S</button
+        ><button data-view="top" aria-label="Top view">T</button>
+        <hr />
+        <button id="rotate" aria-label="Auto rotate" aria-pressed="false">↻</button
+        ><button id="reset" aria-label="Reset">⟲</button>
+        <hr />
+        <button id="plus" aria-label="Zoom in">+</button
+        ><button id="minus" aria-label="Zoom out">−</button>
+      </nav>
+      <aside id="detail" class="panel detail" aria-hidden="true" aria-labelledby="part-name" inert>
+        <button id="close" aria-label="Close details">×</button>
+        <div class="eyebrow" id="part-family"></div>
+        <h2 id="part-name"></h2>
+        <dl>
+          <div>
+            <dt data-en="Part reference" data-zh="零件编号">Part reference</dt>
+            <dd id="part-id"></dd>
+          </div>
+          <div>
+            <dt data-en="Color" data-zh="颜色">Color</dt>
+            <dd id="part-color"></dd>
+          </div>
+          <div>
+            <dt data-en="Same part & color" data-zh="同型同色数量">Same part &amp; color</dt>
+            <dd id="part-total"></dd>
+          </div>
+        </dl>
+        <p id="part-note"></p>
+        <button
+          id="isolate"
+          class="primary"
+          data-en="Isolate this piece ↗"
+          data-zh="单独查看此零件 ↗"
+        >
+          Isolate this piece ↗</button
+        ><button id="hide-part" class="secondary" data-en="Hide this piece" data-zh="隐藏此零件">
+          Hide this piece</button
+        ><button id="clear" class="secondary" data-en="Clear selection" data-zh="取消选择">
+          Clear selection
+        </button>
+      </aside>
+      <div class="bottom">
+        <div class="caption">McLAREN P1 <span>1:8 / TECHNIC STUDY</span></div>
+        <div class="panel explosion">
+          <div class="modes">
+            <button data-mode="assembled" class="active" data-en="Assembled" data-zh="整车">
+              Assembled</button
+            ><button data-mode="types" data-en="Part types" data-zh="零件图鉴">Part types</button
+            ><button data-mode="pieces" data-en="Every piece" data-zh="每件积木">
+              Every piece
+            </button>
+          </div>
+          <div class="explode-heading">
+            <span data-en="Explode P1" data-zh="拆解 P1">Explode P1</span
+            ><span id="inventory-count"></span>
+          </div>
+          <div class="range-row">
+            <input
+              id="spread"
+              type="range"
+              min="0"
+              max="100"
+              value="0"
+              aria-label="Explode model"
+            /><output id="spread-value">0%</output>
+          </div>
+          <div class="range-labels">
+            <span data-en="Assembled" data-zh="整车">Assembled</span
+            ><span data-en="Separate" data-zh="结构展开">Separate</span
+            ><span data-en="Inventory" data-zh="零件图鉴">Inventory</span>
+          </div>
+          <div class="covers">
+            <button id="hood" aria-pressed="false" data-en="Lift front cover" data-zh="抬起前盖">
+              Lift front cover</button
+            ><button
+              id="engine"
+              aria-pressed="false"
+              data-en="Lift engine cover"
+              data-zh="抬起发动机盖"
+            >
+              Lift engine cover
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer>
+      <span
+        id="gesture-hint"
+        data-en="Drag to orbit · Scroll to zoom · Hover to identify"
+        data-zh="拖动旋转 · 滚轮缩放 · 悬浮识别"
+        >Drag to orbit · Scroll to zoom · Hover to identify</span
+      ><button id="about" data-en="Model & credits ↗" data-zh="模型与来源 ↗">
+        Model & credits ↗
+      </button>
+    </footer>
+    <dialog id="credits">
+      <button id="close-credits" aria-label="Close credits">×</button>
+      <div class="eyebrow">MODEL PROVENANCE</div>
+      <h2 data-en="A community-built P1." data-zh="来自社区的 P1 数字模型。">
+        A community-built P1.
+      </h2>
+      <p
+        data-en="This explorer uses Vito Tarantini&#x27;s Studio model shared on the LDraw forum. The model&#x27;s part count differs from the official set. Decals and printed surfaces may be incomplete. Part families are classified from source part descriptions, not official assembly groups."
+        data-zh="本项目使用 Vito Tarantini 在 LDraw 论坛分享的 Studio 模型。模型零件数量与官方套装不同，贴纸和印刷可能不完整。目录按原始零件描述分类，并非官方装配分组。"
+      >
+        This explorer uses Vito Tarantini's Studio model shared on the LDraw forum. The model's part
+        count differs from the official set. Decals and printed surfaces may be incomplete. Part
+        families are classified from source part descriptions, not official assembly groups.
+      </p>
+      <p
+        data-en="Cover controls lift source submodels; they do not simulate hinges or drivetrain physics."
+        data-zh="前后盖控件抬起原模型的子组件，暂不模拟铰链和传动机构。"
+      >
+        Cover controls lift source submodels; they do not simulate hinges or drivetrain physics.
+      </p>
+      <a
+        href="https://forums.ldraw.org/thread-27891-post-56319.html"
+        target="_blank"
+        rel="noreferrer"
+        data-en="Community model source ↗"
+        data-zh="社区模型来源 ↗"
+        >Community model source ↗</a
+      ><a
+        href="https://www.lego.com/en-us/service/building-instructions/42172"
+        target="_blank"
+        rel="noreferrer"
+        data-en="Official building instructions ↗"
+        data-zh="官方搭建说明 ↗"
+        >Official building instructions ↗</a
+      >
+      <p
+        data-en="LDraw primitives: CC BY 4.0. LEGO and McLaren are trademarks of their respective owners. Unofficial independent project."
+        data-zh="LDraw 基础几何采用 CC BY 4.0 许可。LEGO 和 McLaren 商标归各自所有者所有。本项目为非官方独立作品。"
+      >
+        LDraw primitives: CC BY 4.0. LEGO and McLaren are trademarks of their respective owners.
+        Unofficial independent project.
+      </p>
+    </dialog>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
