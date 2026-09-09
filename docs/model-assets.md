@@ -19,7 +19,7 @@ npm run check
 
 Rebuilding requires Python 3, `curl` and network access to the official LDraw library. The preparation script extracts the required files directly from `model.io` and resolves missing primitives. The conversion script updates the two runtime files. Commit both runtime files together after an intentional source model change.
 
-The conversion produces 277 unique part definitions and 3,905 selectable instances, shown as 386 reference/color combinations in the default inventory. The display plaque is omitted. This differs from the official set's 3,893-piece inventory. The geometry buffer is about 34 MB before HTTP compression.
+The conversion produces 277 unique part definitions and 3,905 selectable instances. Every instance has its own position in the exploded inventory, including identical parts of the same color. The display plaque is omitted. This differs from the official set's 3,893-piece inventory. The geometry buffer is about 34 MB before HTTP compression.
 
 ## Attribution
 

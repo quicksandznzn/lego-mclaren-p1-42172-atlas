@@ -17,11 +17,6 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
 stage.append(renderer.domElement);
-const badges = document.createElement('canvas');
-badges.className = 'inventory-badges';
-badges.setAttribute('aria-hidden', 'true');
-stage.append(badges);
-const badgeContext = badges.getContext('2d')!;
 const scene = new THREE.Scene();
 scene.add(new THREE.HemisphereLight(0xffffff, 0xa5a08b, 2));
 for (const [x, y, z, intensity] of [
@@ -87,10 +82,6 @@ function fitCamera(name = cameraView) {
 new ResizeObserver(() => {
   const { width, height } = stage.getBoundingClientRect();
   renderer.setSize(width, height);
-  badges.width = width * renderer.getPixelRatio();
-  badges.height = height * renderer.getPixelRatio();
-  badges.style.width = `${width}px`;
-  badges.style.height = `${height}px`;
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
   layoutKey = '';
@@ -103,12 +94,11 @@ let data: ModelData,
   selected: Part | undefined,
   isolated: Part | undefined;
 let inspectionCamera: { position: THREE.Vector3; target: THREE.Vector3 } | undefined;
-let mode = 'assembled',
-  spread = 0,
+let spread = 0,
   amount = 0,
   frontLift = false,
   engineLift = false;
-let layout = inventoryLayout([], 1, true),
+let layout = inventoryLayout([], 1),
   layoutKey = '';
 fitCamera();
 const enabled = families.map(() => true);
@@ -134,7 +124,6 @@ function animate(now: number) {
   controls.update();
   if (needsRender) {
     renderer.render(scene, camera);
-    drawQuantityLabels();
     needsRender = false;
   }
 }
@@ -172,12 +161,7 @@ function applyTransforms() {
       ((frontLift && p.group.includes('bagagli')) || (engineLift && p.group.includes('motore')))
     )
       d[1] += 2 * (1 - amount);
-    const duplicate = mode !== 'pieces' && cell && cell.representative !== p.index && !isolated;
-    const scale = !visible(p)
-      ? 0
-      : duplicate
-        ? 1 - THREE.MathUtils.smoothstep(amount, 0.4, 0.8)
-        : 1;
+    const scale = visible(p) ? 1 : 0;
     p.displayed = scale > 0.001;
     p.offset.set(...(d as [number, number, number]));
     matrix.scale(scaleVector.setScalar(scale));
@@ -200,50 +184,18 @@ function applyTransforms() {
     : tr('Drag to orbit · Scroll to zoom · Hover to identify', '拖动旋转 · 滚轮缩放 · 悬浮识别');
   needsRender = true;
 }
-function drawQuantityLabels() {
-  const ctx = badgeContext,
-    ratio = renderer.getPixelRatio();
-  ctx.clearRect(0, 0, badges.width, badges.height);
-  if (amount < 0.98 || isolated) return;
-  ctx.save();
-  ctx.scale(ratio, ratio);
-  ctx.font = '9px Arial';
-  ctx.fillStyle = '#7a8273';
-  const width = badges.width / ratio,
-    height = badges.height / ratio;
-  for (const [id, cell] of layout.cells) {
-    if (id !== cell.representative) continue;
-    const p = parts[id];
-    if (!p.displayed) continue;
-    const corner = new THREE.Vector3(cell.x + cell.width / 2, cell.y - cell.height / 2, 0).project(
-      camera,
-    );
-    const left = new THREE.Vector3(cell.x - cell.width / 2, cell.y, 0).project(camera);
-    const px = ((corner.x + 1) * width) / 2,
-      py = ((1 - corner.y) * height) / 2;
-    if (((corner.x - left.x) * width) / 2 < 28 || px < 0 || py < 0 || px > width || py > height)
-      continue;
-    if (cell.count > 1 && mode !== 'pieces') {
-      ctx.textAlign = 'right';
-      ctx.fillText(`×${cell.count}`, px - 2, py - 2);
-    }
-  }
-  ctx.restore();
-}
 function updateModel() {
   if (!isolated) camera.clearViewOffset();
   const shown = parts.filter(visible);
-  const key = shown.map((p) => p.index).join(',') + ':' + mode + ':' + camera.aspect.toFixed(3);
+  const key = shown.map((p) => p.index).join(',') + ':' + camera.aspect.toFixed(3);
   if (key !== layoutKey) {
     layout = inventoryLayout(
       shown.map((p) => ({
         id: p.index,
-        key: `${p.name}:${p.color}`,
         width: p.size.x,
         height: p.size.y,
       })),
       camera.aspect,
-      mode !== 'pieces',
     );
     layoutKey = key;
     if (amount > 0.4 && !isolated) fitCamera();
@@ -252,21 +204,17 @@ function updateModel() {
     `${shown.length.toLocaleString()} ${shown.length === 1 ? 'piece' : 'pieces'}`,
     `${shown.length.toLocaleString()} 件积木`,
   );
-  element('inventory-count').textContent =
-    mode === 'pieces'
-      ? tr(
-          `${layout.count.toLocaleString()} individual pieces`,
-          `逐件展示 ${layout.count.toLocaleString()} 件积木`,
-        )
-      : tr(
-          `${layout.count} ${layout.count === 1 ? 'part type' : 'part types'} · Repeats grouped by color`,
-          `${layout.count} 种零件 · 同色重复件合并显示`,
-        );
+  element('inventory-count').textContent = tr(
+    `${layout.count.toLocaleString()} individual ${layout.count === 1 ? 'piece' : 'pieces'}`,
+    `逐件展示 ${layout.count.toLocaleString()} 件积木`,
+  );
   element('spread-value').textContent = `${Math.round(spread * 100)}%`;
   element('spread').setAttribute('aria-valuetext', `${Math.round(spread * 100)}%`);
   document
     .querySelectorAll<HTMLButtonElement>('[data-mode]')
-    .forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
+    .forEach((b) =>
+      b.classList.toggle('active', b.dataset.mode === (spread === 0 ? 'assembled' : 'pieces')),
+    );
   element('hood').setAttribute('aria-pressed', String(frontLift));
   element('engine').setAttribute('aria-pressed', String(engineLift));
   applyTransforms();
@@ -370,7 +318,6 @@ function restoreModel() {
   enabled.fill(true);
   parts.forEach((p) => (p.hidden = false));
   frontLift = engineLift = false;
-  mode = 'assembled';
   spread = 0;
   element<HTMLInputElement>('spread').value = '0';
   renderPartLibrary();
@@ -490,8 +437,7 @@ document
 document.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach(
   (b) =>
     (b.onclick = () => {
-      mode = b.dataset.mode!;
-      spread = mode === 'assembled' ? 0 : 1;
+      spread = b.dataset.mode === 'assembled' ? 0 : 1;
       element<HTMLInputElement>('spread').value = String(spread * 100);
       isolated = undefined;
       frontLift = engineLift = false;
@@ -502,7 +448,6 @@ document.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach(
 );
 element<HTMLInputElement>('spread').oninput = (e) => {
   spread = Number((e.target as HTMLInputElement).value) / 100;
-  if (mode === 'assembled' && spread) mode = 'types';
   if (isolated) {
     isolated = undefined;
     selected = undefined;
@@ -585,9 +530,7 @@ bindPointerSelection(renderer.domElement, pickPart, selectPart, (part, event) =>
   element('tooltip').hidden = !part;
   renderer.domElement.style.cursor = part ? 'pointer' : amount > 0.85 ? 'move' : 'grab';
   if (!part) return;
-  element('tooltip').textContent =
-    part.label +
-    (amount > 0.8 && mode !== 'pieces' ? ` × ${layout.cells.get(part.index)?.count || 1}` : '');
+  element('tooltip').textContent = part.label;
   element('tooltip').style.left =
     `${Math.max(8, Math.min(event.clientX + 16, innerWidth - 275))}px`;
   element('tooltip').style.top = `${Math.min(event.clientY + 18, innerHeight - 50)}px`;

@@ -2,7 +2,6 @@ import { families } from './part-families.ts';
 
 export interface InventoryItem {
   id: number;
-  key: string;
   width: number;
   height: number;
 }
@@ -11,23 +10,14 @@ export interface InventoryCell {
   y: number;
   width: number;
   height: number;
-  count: number;
-  representative: number;
 }
 // Shelf-packing approach adapted from Human Atlas (MIT); see public/THIRD_PARTY.txt.
-/** One shelf cell per visible piece, or per reference + color. Bounds include a pickable gap. */
-export function inventoryLayout(items: InventoryItem[], aspect: number, unique: boolean) {
-  const groups = new Map<string, InventoryItem[]>();
-  for (const item of items) {
-    const key = unique ? item.key : String(item.id);
-    const group = groups.get(key);
-    if (group) group.push(item);
-    else groups.set(key, [item]);
-  }
-  const cards = [...groups.values()].map((group) => ({
-    group,
-    width: Math.max(0.08, ...group.map((p) => p.width)) + 0.12,
-    height: Math.max(0.08, ...group.map((p) => p.height)) + 0.12,
+/** One shelf cell per visible piece, including identical copies. Bounds include a pickable gap. */
+export function inventoryLayout(items: InventoryItem[], aspect: number) {
+  const cards = items.map((item) => ({
+    id: item.id,
+    width: Math.max(0.08, item.width) + 0.12,
+    height: Math.max(0.08, item.height) + 0.12,
   }));
   const area = cards.reduce((sum, c) => sum + c.width * c.height, 0);
   const target = Math.max(
@@ -35,7 +25,7 @@ export function inventoryLayout(items: InventoryItem[], aspect: number, unique: 
     ...cards.map((c) => c.width),
     Math.sqrt(area * Math.max(0.25, Math.min(2.5, aspect))) * 1.1,
   );
-  cards.sort((a, b) => b.height - a.height || a.group[0].id - b.group[0].id);
+  cards.sort((a, b) => b.height - a.height || a.id - b.id);
   const cells = new Map<number, InventoryCell>();
   let x = 0,
     y = 0,
@@ -52,16 +42,14 @@ export function inventoryLayout(items: InventoryItem[], aspect: number, unique: 
       y: -y - card.height / 2,
       width: card.width,
       height: card.height,
-      count: card.group.length,
-      representative: card.group[0].id,
     };
-    for (const p of card.group) cells.set(p.id, cell);
+    cells.set(card.id, cell);
     x += card.width;
     width = Math.max(width, x);
     row = Math.max(row, card.height);
   }
   const height = y + row;
-  for (const cell of new Set(cells.values())) {
+  for (const cell of cells.values()) {
     cell.x -= width / 2;
     cell.y += height / 2;
   }
