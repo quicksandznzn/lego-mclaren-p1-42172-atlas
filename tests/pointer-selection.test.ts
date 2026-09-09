@@ -60,3 +60,28 @@ test('selection persists on empty taps; drags and multi-touch never select', () 
   send('pointerup');
   assert.equal(calls, 2, 'Disposal removes the listeners');
 });
+
+test('rapid hover moves identify each part and leaving clears the tooltip', () => {
+  const canvas = new EventTarget();
+  const hovered: (number | undefined)[] = [];
+  const dispose = bindPointerSelection(
+    canvas,
+    (event) => event.clientX,
+    () => {},
+    (item) => hovered.push(item),
+  );
+  for (const x of [10, 20, 30]) {
+    canvas.dispatchEvent(
+      Object.assign(new Event('pointermove'), {
+        pointerId: 1,
+        pointerType: 'mouse',
+        buttons: 0,
+        clientX: x,
+        clientY: 0,
+      }),
+    );
+  }
+  canvas.dispatchEvent(new Event('pointerleave'));
+  assert.deepEqual(hovered, [10, 20, 30, undefined]);
+  dispose();
+});

@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { families } from './model/part-families.ts';
 import { inventoryLayout, explosionOffset } from './model/inventory-layout.ts';
 import { loadModel, type ModelData, type Part } from './viewer/model-loader.ts';
+import { findScreenTarget, type ScreenTarget } from './viewer/screen-picking.ts';
 import { bindPointerSelection } from './viewer/pointer-selection.ts';
 import { setInspectorOpen } from './ui/inspector.ts';
 const element = <T extends HTMLElement = HTMLElement>(id: string) =>
@@ -105,6 +106,8 @@ const enabled = families.map(() => true);
 const meshes: THREE.InstancedMesh[] = [];
 const raycaster = new THREE.Raycaster(),
   pointer = new THREE.Vector2();
+let screenTargets: ScreenTarget[] = [];
+const projected = new THREE.Vector3();
 let needsRender = true;
 controls.addEventListener('change', () => {
   needsRender = true;
@@ -124,6 +127,7 @@ function animate(now: number) {
   controls.update();
   if (needsRender) {
     renderer.render(scene, camera);
+    updateScreenTargets();
     needsRender = false;
   }
 }
@@ -210,11 +214,6 @@ function updateModel() {
   );
   element('spread-value').textContent = `${Math.round(spread * 100)}%`;
   element('spread').setAttribute('aria-valuetext', `${Math.round(spread * 100)}%`);
-  document
-    .querySelectorAll<HTMLButtonElement>('[data-mode]')
-    .forEach((b) =>
-      b.classList.toggle('active', b.dataset.mode === (spread === 0 ? 'assembled' : 'pieces')),
-    );
   element('hood').setAttribute('aria-pressed', String(frontLift));
   element('engine').setAttribute('aria-pressed', String(engineLift));
   applyTransforms();
@@ -434,18 +433,7 @@ element('minus').onclick = () => {
 document
   .querySelectorAll<HTMLButtonElement>('[data-view]')
   .forEach((b) => (b.onclick = () => fitCamera(b.dataset.view)));
-document.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach(
-  (b) =>
-    (b.onclick = () => {
-      spread = b.dataset.mode === 'assembled' ? 0 : 1;
-      element<HTMLInputElement>('spread').value = String(spread * 100);
-      isolated = undefined;
-      frontLift = engineLift = false;
-      selected = undefined;
-      setInspectorOpen(element('detail'), false);
-      updateModel();
-    }),
-);
+element('assemble-reset').onclick = () => element('reset').click();
 element<HTMLInputElement>('spread').oninput = (e) => {
   spread = Number((e.target as HTMLInputElement).value) / 100;
   if (isolated) {
@@ -491,44 +479,71 @@ function search() {
   if (!unique.length) element('results').textContent = tr('No matching parts.', '未找到零件。');
 }
 element('search').oninput = search;
+function updateScreenTargets() {
+  screenTargets = [];
+  if (amount <= 0.85 || isolated) return;
+  const { width, height } = renderer.domElement.getBoundingClientRect();
+  for (const p of parts) {
+    if (!p.displayed) continue;
+    projected.copy(p.center).add(p.offset).project(camera);
+    if (projected.z < -1 || projected.z > 1) continue;
+    const target: ScreenTarget = {
+      index: p.index,
+      x: ((projected.x + 1) * width) / 2,
+      y: ((1 - projected.y) * height) / 2,
+      left: Infinity,
+      right: -Infinity,
+      top: Infinity,
+      bottom: -Infinity,
+    };
+    for (let corner = 0; corner < 8; corner++) {
+      projected
+        .set(
+          p.center.x + p.offset.x + p.size.x * (corner & 1 ? 0.5 : -0.5),
+          p.center.y + p.offset.y + p.size.y * (corner & 2 ? 0.5 : -0.5),
+          p.center.z + p.offset.z + p.size.z * (corner & 4 ? 0.5 : -0.5),
+        )
+        .project(camera);
+      const x = ((projected.x + 1) * width) / 2,
+        y = ((1 - projected.y) * height) / 2;
+      target.left = Math.min(target.left, x);
+      target.right = Math.max(target.right, x);
+      target.top = Math.min(target.top, y);
+      target.bottom = Math.max(target.bottom, y);
+    }
+    screenTargets.push(target);
+  }
+}
 function pickPart(e: PointerEvent): Part | undefined {
   const rect = renderer.domElement.getBoundingClientRect();
+  if (amount > 0.85 && !isolated) {
+    const index = findScreenTarget(
+      screenTargets,
+      e.clientX - rect.left,
+      e.clientY - rect.top,
+      e.pointerType === 'touch' ? 24 : 12,
+    );
+    return index === undefined ? undefined : parts[index];
+  }
   pointer.set(
     ((e.clientX - rect.left) / rect.width) * 2 - 1,
     (-(e.clientY - rect.top) / rect.height) * 2 + 1,
   );
   scene.updateMatrixWorld(true);
   raycaster.setFromCamera(pointer, camera);
-  const h = raycaster
+  const hit = raycaster
     .intersectObjects(meshes, false)
     .find(
-      (h) => h.instanceId !== undefined && parts[h.object.userData.parts[h.instanceId]].displayed,
+      (hit) =>
+        hit.instanceId !== undefined && parts[hit.object.userData.parts[hit.instanceId]].displayed,
     );
-  if (h && h.instanceId !== undefined) return parts[h.object.userData.parts[h.instanceId]];
-  // Small pins still get a usable target in the flattened inventory.
-  if (amount > 0.85 && !isolated) {
-    let nearest: Part | undefined,
-      distance = e.pointerType === 'touch' ? 20 : 10;
-    for (const p of parts) {
-      if (!p.displayed) continue;
-      const point = p.center.clone().add(p.offset).project(camera);
-      if (point.z < -1 || point.z > 1) continue;
-      const d = Math.hypot(
-        ((point.x + 1) * rect.width) / 2 + rect.left - e.clientX,
-        ((1 - point.y) * rect.height) / 2 + rect.top - e.clientY,
-      );
-      if (d < distance) {
-        distance = d;
-        nearest = p;
-      }
-    }
-    return nearest;
-  }
-  return undefined;
+  return hit?.instanceId === undefined
+    ? undefined
+    : parts[hit.object.userData.parts[hit.instanceId]];
 }
 bindPointerSelection(renderer.domElement, pickPart, selectPart, (part, event) => {
   element('tooltip').hidden = !part;
-  renderer.domElement.style.cursor = part ? 'pointer' : amount > 0.85 ? 'move' : 'grab';
+  renderer.domElement.style.cursor = part ? 'pointer' : 'default';
   if (!part) return;
   element('tooltip').textContent = part.label;
   element('tooltip').style.left =

@@ -284,23 +284,6 @@ header p {
 .explosion {
   padding: 14px 18px;
 }
-.modes {
-  display: flex;
-  gap: 4px;
-}
-.modes button {
-  flex: 1;
-  border: 0;
-  border-radius: 6px;
-  background: none;
-  font-size: 10px;
-  padding: 9px 4px;
-  color: #838b7b;
-}
-.modes button.active {
-  color: #303b31;
-  background: #eef1e8;
-}
 .range-row {
   display: flex;
   align-items: center;
@@ -312,7 +295,7 @@ header p {
   accent-color: var(--orange);
   cursor: pointer;
 }
-.range-row output {
+.explode-heading output {
   font-size: 10px;
   color: #89917d;
   min-width: 30px;
@@ -634,9 +617,9 @@ dialog::backdrop {
   justify-content: space-between;
   gap: 12px;
   font-size: 10px;
-  margin-top: 15px;
+  align-items: center;
 }
-.explode-heading #inventory-count {
+.caption #inventory-count {
   font-size: 8px;
   color: #89917d;
   text-align: right;
@@ -646,13 +629,13 @@ dialog::backdrop {
   justify-content: space-between;
   font-size: 8px;
   color: #8c9384;
-  margin: -2px 0 14px;
+  margin: -2px 0 0;
 }
 .bottom {
   bottom: 45px;
 }
 #stage {
-  bottom: 245px;
+  bottom: 190px;
 }
 .camera button:disabled {
   cursor: default;
@@ -719,4 +702,36 @@ dialog::backdrop {
   .detail[aria-hidden='false'] {
     transform: translateY(0);
   }
+}
+
+.explosion {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+}
+.explosion-slider {
+  flex: 1;
+  min-width: 0;
+}
+.explode-heading output {
+  background: #eef1e8;
+  border-radius: 4px;
+  padding: 3px 5px;
+  text-align: center;
+}
+#assemble-reset {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: none;
+  border: 0;
+  border-left: 1px solid var(--line);
+  padding: 0 0 0 16px;
+  font-size: 9px;
+  color: #78816f;
+}
+#assemble-reset > span:first-child {
+  font-size: 20px;
 }

@@ -6,7 +6,6 @@ export function bindPointerSelection<T>(
   hover: (item: T | undefined, event: PointerEvent) => void,
 ) {
   const pointers = new Map<number, { x: number; y: number; moved: boolean }>();
-  let lastHover = 0;
   const down = (event: Event) => {
     const e = event as PointerEvent;
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, moved: e.button !== 0 });
@@ -26,8 +25,6 @@ export function bindPointerSelection<T>(
     )
       pointer.moved = true;
     if (pointers.size || e.buttons || e.pointerType === 'touch') return;
-    if (performance.now() - lastHover < 60) return;
-    lastHover = performance.now();
     hover(pick(e), e);
   };
   const up = (event: Event) => {
