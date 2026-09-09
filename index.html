@@ -13,10 +13,6 @@
       <h1>McLAREN<span>P1</span><small>42172</small></h1>
       <p id="subtitle">The anatomy of a hypercar.</p>
     </header>
-    <div class="language">
-      <button id="en" aria-pressed="true">EN</button
-      ><button id="zh" aria-pressed="false">中文</button>
-    </div>
     <main>
       <div id="stage" aria-label="Interactive McLaren P1 model"></div>
       <div id="tooltip" hidden></div>
@@ -26,10 +22,7 @@
         <p id="load-copy">Loading the community digital model…</p>
       </div>
       <aside class="panel library">
-        <div class="panel-heading">
-          <span data-en="PART LIBRARY" data-zh="零件目录">PART LIBRARY</span
-          ><span id="part-count">—</span>
-        </div>
+        <div class="panel-heading"><span>PART LIBRARY</span><span id="part-count">—</span></div>
         <input
           id="search"
           type="search"
@@ -37,26 +30,31 @@
           placeholder="Find a part or number…"
         />
         <div class="presets">
-          <button id="all" data-en="All parts" data-zh="全部零件">All parts</button
-          ><button id="internal" data-en="Under the skin" data-zh="隐藏外壳">Under the skin</button>
+          <button id="all" aria-pressed="true">All parts</button
+          ><button id="internal" aria-pressed="false">Under the skin</button>
+          <button
+            id="structure"
+            aria-pressed="false"
+            title="Show beams, frames, axles and connectors"
+          >
+            Structure only
+          </button>
+          <button
+            id="mechanisms"
+            aria-pressed="false"
+            title="Show engine, transmission, steering and suspension parts"
+          >
+            Mechanisms only
+          </button>
         </div>
         <div id="families"></div>
         <div id="results" hidden></div>
         <div class="covers">
-          <button id="hood" aria-pressed="false" data-en="Lift front cover" data-zh="抬起前盖">
-            Lift front cover</button
-          ><button
-            id="engine"
-            aria-pressed="false"
-            data-en="Lift engine cover"
-            data-zh="抬起发动机盖"
-          >
-            Lift engine cover
-          </button>
+          <button id="hood" aria-pressed="false">Lift front cover</button
+          ><button id="engine" aria-pressed="false">Lift engine cover</button>
         </div>
         <div class="panel-foot">
-          <span id="visible-count">Waiting for model</span
-          ><button id="restore" data-en="Restore" data-zh="恢复">Restore</button>
+          <span id="visible-count">Waiting for model</span><button id="restore">Restore</button>
         </div>
       </aside>
       <nav class="camera panel" aria-label="Camera">
@@ -78,38 +76,29 @@
         <h2 id="part-name"></h2>
         <dl>
           <div>
-            <dt data-en="Part reference" data-zh="零件编号">Part reference</dt>
+            <dt>Part reference</dt>
             <dd id="part-id"></dd>
           </div>
           <div>
-            <dt data-en="Color" data-zh="颜色">Color</dt>
+            <dt>Color</dt>
             <dd id="part-color"></dd>
           </div>
           <div>
-            <dt data-en="Same part & color" data-zh="同型同色数量">Same part &amp; color</dt>
+            <dt>Same part &amp; color</dt>
             <dd id="part-total"></dd>
           </div>
         </dl>
         <p id="part-note"></p>
-        <button
-          id="isolate"
-          class="primary"
-          data-en="Isolate this piece ↗"
-          data-zh="单独查看此零件 ↗"
-        >
-          Isolate this piece ↗</button
-        ><button id="hide-part" class="secondary" data-en="Hide this piece" data-zh="隐藏此零件">
-          Hide this piece</button
-        ><button id="clear" class="secondary" data-en="Clear selection" data-zh="取消选择">
-          Clear selection
-        </button>
+        <button id="isolate" class="primary">Isolate this piece ↗</button
+        ><button id="hide-part" class="secondary">Hide this piece</button
+        ><button id="clear" class="secondary">Clear selection</button>
       </aside>
       <div class="bottom">
         <div class="caption">McLAREN P1 <span id="inventory-count"></span></div>
         <div class="panel explosion">
           <div class="explosion-slider">
             <div class="explode-heading">
-              <label for="spread" data-en="Explode P1" data-zh="拆解 P1">Explode P1</label>
+              <label for="spread">Explode P1</label>
               <output id="spread-value" for="spread">0%</output>
             </div>
             <div class="range-row">
@@ -123,65 +112,44 @@
               />
             </div>
             <div class="range-labels">
-              <span data-en="Assembled" data-zh="整车">Assembled</span>
-              <span data-en="Every piece" data-zh="每件积木">Every piece</span>
+              <span>Assembled</span>
+              <span>Every piece</span>
             </div>
           </div>
           <button id="assemble-reset" aria-label="Assemble and reset">
-            <span aria-hidden="true">⟲</span><span data-en="Reset" data-zh="重置">Reset</span>
+            <span aria-hidden="true">⟲</span><span>Reset</span>
           </button>
         </div>
       </div>
     </main>
     <footer>
-      <span
-        id="gesture-hint"
-        data-en="Drag to orbit · Scroll to zoom · Hover to identify"
-        data-zh="拖动旋转 · 滚轮缩放 · 悬浮识别"
-        >Drag to orbit · Scroll to zoom · Hover to identify</span
-      ><button id="about" data-en="Model & credits ↗" data-zh="模型与来源 ↗">
-        Model & credits ↗
-      </button>
+      <span id="gesture-hint">Drag to orbit · Scroll to zoom · Hover to identify</span
+      ><button id="about">Model & credits ↗</button>
     </footer>
     <dialog id="credits">
       <button id="close-credits" aria-label="Close credits">×</button>
       <div class="eyebrow">MODEL PROVENANCE</div>
-      <h2 data-en="A community-built P1." data-zh="来自社区的 P1 数字模型。">
-        A community-built P1.
-      </h2>
-      <p
-        data-en="This explorer uses Vito Tarantini&#x27;s Studio model shared on the LDraw forum. The model&#x27;s part count differs from the official set. Decals and printed surfaces may be incomplete. Part families are classified from source part descriptions, not official assembly groups."
-        data-zh="本项目使用 Vito Tarantini 在 LDraw 论坛分享的 Studio 模型。模型零件数量与官方套装不同，贴纸和印刷可能不完整。目录按原始零件描述分类，并非官方装配分组。"
-      >
+      <h2>A community-built P1.</h2>
+      <p>
         This explorer uses Vito Tarantini's Studio model shared on the LDraw forum. The model's part
         count differs from the official set. Decals and printed surfaces may be incomplete. Part
         families are classified from source part descriptions, not official assembly groups.
       </p>
-      <p
-        data-en="Cover controls lift source submodels; they do not simulate hinges or drivetrain physics."
-        data-zh="前后盖控件抬起原模型的子组件，暂不模拟铰链和传动机构。"
-      >
+      <p>
         Cover controls lift source submodels; they do not simulate hinges or drivetrain physics.
       </p>
       <a
         href="https://forums.ldraw.org/thread-27891-post-56319.html"
         target="_blank"
         rel="noreferrer"
-        data-en="Community model source ↗"
-        data-zh="社区模型来源 ↗"
         >Community model source ↗</a
       ><a
         href="https://www.lego.com/en-us/service/building-instructions/42172"
         target="_blank"
         rel="noreferrer"
-        data-en="Official building instructions ↗"
-        data-zh="官方搭建说明 ↗"
         >Official building instructions ↗</a
       >
-      <p
-        data-en="LDraw primitives: CC BY 4.0. LEGO and McLaren are trademarks of their respective owners. Unofficial independent project."
-        data-zh="LDraw 基础几何采用 CC BY 4.0 许可。LEGO 和 McLaren 商标归各自所有者所有。本项目为非官方独立作品。"
-      >
+      <p>
         LDraw primitives: CC BY 4.0. LEGO and McLaren are trademarks of their respective owners.
         Unofficial independent project.
       </p>

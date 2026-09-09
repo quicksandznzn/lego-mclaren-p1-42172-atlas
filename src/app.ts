@@ -8,8 +8,6 @@ import { bindPointerSelection } from './viewer/pointer-selection.ts';
 import { setInspectorOpen } from './ui/inspector.ts';
 const element = <T extends HTMLElement = HTMLElement>(id: string) =>
   document.getElementById(id) as T;
-let lang: 'en' | 'zh' = localStorage.getItem('p1-language') === 'zh' ? 'zh' : 'en';
-const tr = (en: string, zh: string) => (lang === 'en' ? en : zh);
 const stage = element('stage');
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
@@ -184,8 +182,8 @@ function applyTransforms() {
     mesh.computeBoundingSphere();
   }
   element('gesture-hint').textContent = flat
-    ? tr('Drag to pan · Scroll to zoom · Click to inspect', '拖动平移 · 滚轮缩放 · 点击查看')
-    : tr('Drag to orbit · Scroll to zoom · Hover to identify', '拖动旋转 · 滚轮缩放 · 悬浮识别');
+    ? 'Drag to pan · Scroll to zoom · Click to inspect'
+    : 'Drag to orbit · Scroll to zoom · Hover to identify';
   needsRender = true;
 }
 function updateModel() {
@@ -204,16 +202,18 @@ function updateModel() {
     layoutKey = key;
     if (amount > 0.4 && !isolated) fitCamera();
   }
-  element('visible-count').textContent = tr(
-    `${shown.length.toLocaleString()} ${shown.length === 1 ? 'piece' : 'pieces'}`,
-    `${shown.length.toLocaleString()} 件积木`,
-  );
-  element('inventory-count').textContent = tr(
-    `${layout.count.toLocaleString()} individual ${layout.count === 1 ? 'piece' : 'pieces'}`,
-    `逐件展示 ${layout.count.toLocaleString()} 件积木`,
-  );
+  element('visible-count').textContent =
+    `${shown.length.toLocaleString()} ${shown.length === 1 ? 'piece' : 'pieces'}`;
+  element('inventory-count').textContent =
+    `${layout.count.toLocaleString()} individual ${layout.count === 1 ? 'piece' : 'pieces'}`;
   element('spread-value').textContent = `${Math.round(spread * 100)}%`;
   element('spread').setAttribute('aria-valuetext', `${Math.round(spread * 100)}%`);
+  for (const [id, indices] of Object.entries(presets)) {
+    element(id).setAttribute(
+      'aria-pressed',
+      String(!isolated && enabled.every((value, i) => value === indices.includes(i))),
+    );
+  }
   element('hood').setAttribute('aria-pressed', String(frontLift));
   element('engine').setAttribute('aria-pressed', String(engineLift));
   applyTransforms();
@@ -223,17 +223,15 @@ function selectPart(p?: Part) {
   selected = p;
   setInspectorOpen(element('detail'), !!p);
   if (p) {
-    element('part-family').textContent = families[p.family][lang];
+    element('part-family').textContent = families[p.family].label;
     element('part-name').textContent = p.label;
     element('part-id').textContent = p.name.replace(/\.dat$/, '');
     element('part-color').textContent = data.colors[p.color]?.name || p.color;
     element('part-total').textContent = String(
       parts.filter((other) => other.name === p.name && other.color === p.color).length,
     );
-    element('part-note').textContent = tr(
-      'Select a piece on the model or search the library. Drag to inspect it from any angle.',
-      '点击模型或搜索零件，拖动模型可从不同角度查看。',
-    );
+    element('part-note').textContent =
+      'Select a piece on the model or search the library. Drag to inspect it from any angle.';
   }
   const color = new THREE.Color();
   for (const part of [previous, selected]) {
@@ -256,61 +254,27 @@ function renderPartLibrary() {
     const dot = document.createElement('i');
     dot.style.background = f.color;
     const label = document.createElement('span');
-    label.textContent = f[lang];
+    label.textContent = f.label;
     const count = document.createElement('small');
     count.textContent = String(parts.filter((p) => p.family === index).length);
     b.append(dot, label, count);
     const input = document.createElement('input');
     input.type = 'checkbox';
     input.checked = enabled[index];
-    input.setAttribute('aria-label', tr(`Show ${f.en}`, `显示${f.zh}`));
+    input.setAttribute('aria-label', `Show ${f.label}`);
     input.onchange = () => {
-      enabled[index] = input.checked;
-      isolated = undefined;
-      updateModel();
+      const next = enabled.map((value, i) => (i === index ? input.checked : value));
+      showFamilies(next);
     };
-    b.title = tr(`Show only ${f.en}`, `只显示${f.zh}`);
+    b.title = `Show only ${f.label}`;
     b.onclick = () => {
-      isolated = undefined;
-      enabled.fill(false);
-      enabled[index] = true;
-      selected = undefined;
-      setInspectorOpen(element('detail'), false);
-      renderPartLibrary();
-      updateModel();
+      showFamilies(families.map((_, i) => i === index));
     };
     row.append(b, input);
     element('families').append(row);
   });
   element('part-count').textContent = parts.length.toLocaleString();
 }
-function updateLanguage() {
-  document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
-  document.querySelectorAll<HTMLElement>('[data-en]').forEach((el) => {
-    el.textContent = el.dataset[lang]!;
-  });
-  element('subtitle').textContent = tr(
-    'The anatomy of a hypercar.',
-    '拆开一台超级跑车，探索每一块积木。',
-  );
-  element<HTMLInputElement>('search').placeholder = tr(
-    'Find a part or number…',
-    '搜索英文名称或编号…',
-  );
-  element('en').setAttribute('aria-pressed', String(lang === 'en'));
-  element('zh').setAttribute('aria-pressed', String(lang === 'zh'));
-  if (parts.length) {
-    renderPartLibrary();
-    selectPart(selected);
-    search();
-  }
-}
-for (const l of ['en', 'zh'] as const)
-  element(l).onclick = () => {
-    lang = l;
-    localStorage.setItem('p1-language', l);
-    updateLanguage();
-  };
 function restoreModel() {
   inspectionCamera = undefined;
   isolated = undefined;
@@ -325,22 +289,28 @@ function restoreModel() {
   fitCamera('perspective');
 }
 element('restore').onclick = restoreModel;
-element('all').onclick = () => {
+function showFamilies(next: boolean[]) {
+  const wasIsolated = !!isolated;
   isolated = undefined;
-  enabled.fill(true);
-  parts.forEach((p) => (p.hidden = false));
-  renderPartLibrary();
+  inspectionCamera = undefined;
+  next.forEach((value, i) => (enabled[i] = value));
+  parts.forEach((part) => (part.hidden = false));
+  element<HTMLInputElement>('search').value = '';
+  search();
   selectPart();
-  updateModel();
-};
-element('internal').onclick = () => {
-  if (isolated) fitCamera();
-  isolated = undefined;
-  enabled.fill(true);
-  enabled[0] = false;
   renderPartLibrary();
   updateModel();
+  if (wasIsolated) fitCamera();
+}
+const presets: Record<string, number[]> = {
+  all: families.map((_, i) => i),
+  internal: families.map((_, i) => i).filter((i) => i !== 0),
+  structure: [2, 3],
+  mechanisms: [4, 6],
 };
+for (const [id, indices] of Object.entries(presets)) {
+  element(id).onclick = () => showFamilies(families.map((_, i) => indices.includes(i)));
+}
 function clearSelection() {
   const wasIsolated = !!isolated;
   isolated = undefined;
@@ -476,7 +446,7 @@ function search() {
     };
     element('results').append(b);
   }
-  if (!unique.length) element('results').textContent = tr('No matching parts.', '未找到零件。');
+  if (!unique.length) element('results').textContent = 'No matching parts.';
 }
 element('search').oninput = search;
 function updateScreenTargets() {
@@ -555,10 +525,9 @@ document.addEventListener('keydown', (e) => {
     clearSelection();
   }
 });
-updateLanguage();
 async function load() {
   const loaded = await loadModel(model, () => {
-    element('load-copy').textContent = tr('Building the shared part library…', '正在准备零件几何…');
+    element('load-copy').textContent = 'Building the shared part library…';
   });
   data = loaded.data;
   parts = loaded.parts;
@@ -570,7 +539,7 @@ async function load() {
   element('loading').hidden = true;
 }
 load().catch((error) => {
-  element('load-title').textContent = tr('Unable to load the model', '模型加载失败');
+  element('load-title').textContent = 'Unable to load the model';
   element('load-copy').textContent = String(error.message);
   console.error(error);
 });
